@@ -1,0 +1,58 @@
+-- baixar imagem
+docker pull marvambass/apache2-ssl-secure
+
+-- instanciar container
+docker run -d -p 80:80 -p 443:443 -v /etc/apache2/external/ marvambass/apache2-ssl-secure
+docker ps
+docker exec CONTAINER -it /bin/bash
+
+-- instalar php 7
+apt-get update
+apt-get install software-properties-common python-software-properties
+apt-add-repository ppa:ondrej/php
+apt-get update
+apt-get install php7.0
+apt-get install libapache2-mod-php7.0 
+a2query -m php7.0
+
+-- persistir container
+exit 
+docker commit CONTAINER marvambass/apache2-ssl-secure/php7
+docker kill CONTAINER
+
+-- reiniciar container
+docker run -d -p 80:80 -p 443:443 -v /etc/apache2/external/ marvambass/apache2-ssl-secure/php7
+docker ps
+docker exec -it CONTAINER /bin/bash
+
+-- instalar vim
+apt-get install vim
+
+-- criar index e php info
+cd /var/www/html
+vim index.html
+vim info.php
+
+-- instalar php slim
+apt-get install git
+#baixar codigo via git
+php composer.phar require slim/slim
+apt-get install -y autoconf g++ makeopenssl libssl-dev libcurl4-openssl-dev
+apt-get install -y libcurl4-openssl-dev pkg-config
+apt-get install -y libsasl2-dev
+apt-get install php7.0-dev php7.0-cli php-pear -y
+apt-get install php7.0-xml
+pecl install mongodb
+git clone https://github.com/mongodb/mongo-php-driver.git
+cd mongo-php-driver
+git submodule sync && git submodule update --init
+phpize
+./configure
+make all -j 5
+sudo make install
+php -i | grep 'Configuration File'
+vim [path to php.ini]
+#add extension=mongodb.so to php.ini
+
+--rodar php server
+php -S 0.0.0.0:80 1>stdout.log &
